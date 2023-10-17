@@ -1,0 +1,14 @@
+data/CANMsg/CANMsg.h.i
+data/Other_things/CONTRIBUTING.md.i
+data/mbed-os.lib.i
+data/.gitignore.i
+data/main.cpp.i
+data/Other_things/mbed_app.json.i
+data/LSM6DS3/LSM6DS3.h.i
+data/frontdefs.h.i
+data/Kalman/Kalman.cpp.i
+data/Kalman/Kalman.h.i
+data/LSM6DS3/LSM6DS3.cpp.i
+data/Other_things/stats_report.h.i
+data/BAJADefs/definitions.h.i
+data/Other_things/README.md.i
