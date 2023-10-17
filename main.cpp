@@ -539,7 +539,7 @@ void Servo_flag(uint8_t state)
     }
 }
 
-void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, uint16_t comb, uint8_t tempCVT, uint8_t SOC, uint8_t SOT)
+void displayData(uint16_t vel, uint16_t Hz, uint16_t temp, uint16_t comb, uint16_t tempCVT, uint16_t SOC, uint16_t SOT)
 {
     //db = !db; 
     
