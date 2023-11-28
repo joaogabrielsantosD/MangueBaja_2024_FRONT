@@ -234,7 +234,8 @@ int main ()
                 break;
 
             case VERIFY_4x4_ST:
-                sot <<= acopl_4x4.read();
+                //sot <<= acopl_4x4.read();
+                sot |= ((!acopl_4x4.read() << 1) & 0x02);
 
                 break;
                 //case RADIO_ST:
