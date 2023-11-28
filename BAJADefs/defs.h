@@ -18,6 +18,7 @@
 #define FLAGS_ID        0x101       // 1by
 #define IMU_ACC_ID      0x200       // 6by = 2by + 2by + 2by
 #define IMU_DPS_ID      0x201       // 6by = 2by + 2by + 2by 
+#define ANGLE_ID        0x205       // 4by = 2by + 2by
 #define SPEED_ID        0x300       // 2by 
 #define SOC_ID          0x302       // 1by
 #define RPM_ID          0x304       // 2by
@@ -47,7 +48,7 @@ typedef struct
     uint16_t rpm;
     uint16_t speed;
     uint8_t tempMOTOR;
-    uint8_t flags; // LOW_BATTERY | DANGER_CVT | DANGER_MOTOR | LOW_FUEL_LEVEL | RADIO_ERROR | SERVOR_ERROR | CHOKE | RUN -- LSB
+    uint8_t flags; // LOW_BATTERY | DANGER_CVT | DANGER_MOTOR | LOW_FUEL_LEVEL | MQTT_ON | SERVOR_ERROR | CHOKE | RUN -- LSB
     uint16_t fuel;
     uint8_t soc;
     uint8_t tempCVT;

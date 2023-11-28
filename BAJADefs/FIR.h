@@ -2,55 +2,57 @@
 #ifndef FIR_H
 #define FIR_H
 
+#include <math.h>
+#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-/* You can change the size of the vetor if you needed */
+/* If you needed apply the filter two times */
+//#define double_filter
+
+/*You can change the size of the vetor if you needed*/
 #define SIZE 2
 
-/* Here you can change the filter coefficient manually */
-//const float a = 0.6,
-//            b = 0.6;
+const float a = 0.595,
+            b = 0.595;
 
 /* Can use only in one variable. Using the second variable the value of the static float has change */
-class FIR  {
+class FIR {
     public:
     /*========================================================================================================
+        * "a" and "b" are the filter coefficients
+        * The higher the value of the coefficient, the slower its update rate, but the stronger its filter.
         * Filter based on convolution between previous inputs.
         * Can suport only for order equal 2
-        * @param x is the variable used for the filtering
-        * @param a_coef, b_coef is the coefficients to the filter;
-        *   The higher the value of the coefficient, the slower its update rate, but the stronger its filter.
-        * @param type_filtering if needeed apply your filter two times type_filtering=true   
     ==========================================================================================================*/
-        float filt(float x, float a_coef, float b_coef, bool type_filtering=false);
-
+        float filt(float x);
     private:
     /*=========================
         * Update the vetor
+        * Second filter
     ==========================*/
         void move_vec(float *vetorAddr, int size, float value); 
-        /* Second filter */
-        float filtfilt(float x2, float a_coef, float b_coef); // Second filter if you defined
+        float filtfilt(float A, float B, float x2);
         float double_y;
         bool flag;
-    
-    protected:
-        float a_coef, b_coef;
 };
 
-float FIR::filt(float x, float a_coef, float b_coef, bool type_filtering)
+
+float FIR::filt(float x)
 {
-    /* @var flag is the flag to determinate if your filter is apply two times */
-    if (type_filtering) this->flag=type_filtering;
+    #ifdef double_filter
+        flag = true;
+    #endif
 
     static float y_pass[SIZE] = {0,0}, x_pass[SIZE] = {0,0};
 
-    float y = (a_coef+b_coef)*y_pass[0] - a_coef*b_coef*y_pass[1] + (1-a_coef-b_coef + a_coef*b_coef)*x_pass[1];
+    float y = (a+b)*y_pass[0] - a*b*y_pass[1] + (1-a-b + a*b)*x_pass[1];
     
     move_vec(y_pass, SIZE, y);
     move_vec(x_pass, SIZE, x);
 
-    return (flag) ? filtfilt(y, a_coef, b_coef) : y; 
+    return (flag) ? double_y = filtfilt(a, b, y) : double_y = y;
+    //return y;
 };
 
 void FIR::move_vec(float *vetorAddr, int size, float value)
@@ -63,16 +65,17 @@ void FIR::move_vec(float *vetorAddr, int size, float value)
     *vetorAddr = value;
 };
 
-float FIR::filtfilt(float x2, float a_coef, float b_coef)
+float FIR::filtfilt(float A, float B, float x2)
 {
     static float y2_pass[SIZE] = {0,0}, x2_pass[SIZE] = {0,0};
 
-    float y2 = (a_coef+b_coef)*y2_pass[0] - a_coef*b_coef*y2_pass[1] + (1-a_coef-b_coef + a_coef*b_coef)*x2_pass[1];
+    float y2 = (A+B)*y2_pass[0] - A*B*y2_pass[1] + (1-A-B + A*B)*x2_pass[1];
     
     move_vec(y2_pass, SIZE, y2);
     move_vec(x2_pass, SIZE, x2);
 
     return y2;
 };
+
 
 #endif

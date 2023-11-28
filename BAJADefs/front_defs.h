@@ -4,6 +4,7 @@
 #ifndef MBED
     #define MBED
     #include "mbed.h"
+    #include "FIR.h"
 #endif
 
 /* IMU convertions */
@@ -18,24 +19,17 @@
 #define CHOKE_MODE          0x02
 #define SERVO_RESET         0x03
 #define SERVOR_ERROR        0x04
-/* Radio definitions */
-#define NETWORK_ID          101
-#define BOXRADIO_ID1        69
-#define BOXRADIO_ID2        70
-#define MB1_ID              11
-#define MB2_ID              22
-#define FREQUENCY_915MHZ    91
-#define NORMAL_THRESHOLD    68
 
 typedef enum {
-    IDLE_ST,
-    IMU_ST,
-    RPM_ST,
-    RADIO_ST,
-    THROTTLE_ST,
-    FLAGS_ST,
-    DISPLAY_ST,
-    DEBUG_ST
+    IDLE_ST,        // wait
+    IMU_ST,         // Process the acceleration and angular velocity 
+    RPM_ST,         // Process the RPM of Motor
+    //RADIO_ST,
+    VERIFY_4x4_ST,  // Verify if the 4x4 is enable
+    THROTTLE_ST,    // Write throttle position (PWM)
+    FLAGS_ST,       // Enable the bit if the condition is true, emergency and logging bits
+    DISPLAY_ST,     // Send the data to panel
+    DEBUG_ST        // Send data to Debug
 
 } state_t;
 
