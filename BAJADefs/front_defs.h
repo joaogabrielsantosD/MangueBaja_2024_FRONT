@@ -37,11 +37,11 @@ typedef struct {
     
   uint16_t speed;
   uint16_t rpm;
-  uint16_t battery;
+  uint8_t battery;
   uint16_t level;
-  uint16_t temp_cvt;
-  uint16_t temp_motor;
-  uint16_t sot;
+  uint8_t temp_cvt;
+  uint8_t temp_motor;
+  uint8_t sot;
 
 } Txtmng;
 
