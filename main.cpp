@@ -58,10 +58,10 @@ Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
 bool switch_clicked = false;
+uint8_t array_data[sizeof(Txtmng)];
 uint8_t imu_failed = 0;                  // number of times before a new connection attempt with imu 
 uint8_t pulse_counter = 0, sot = 0x00;
 uint16_t dt = 0;
-uint16_t array_data[sizeof(Txtmng)];
 uint32_t imu_last_acq = 0;
 uint64_t last_acq = 0;
 uint64_t current_period = 0, last_count = 0;
@@ -82,13 +82,17 @@ void setupInterrupts();
 void filterMessage(CANMsg msg);
 void calcAngles(int16_t accx, int16_t accy, int16_t accz, int16_t grx, int16_t gry, int16_t grz, int16_t dt);
 void Servo_flag(uint8_t state);
-void displayData(uint16_t vel, uint16_t Hz, uint16_t temp, uint16_t comb, uint16_t tempCVT, uint16_t SOC, uint16_t SOT);
+void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, uint16_t comb, uint8_t tempCVT, uint8_t SOC, uint8_t SOT);
 
 /* CAN Variables */
-uint16_t RPM = 0;       // 2by
-uint8_t flags = 0x00;   // 1by
-uint8_t switch_state = 0x00; // THROTTLE_ID = 1by
-//imu -> acc=6by(2by+2by+2by) -> dps=6y(2by+2by+2by)
+uint16_t RPM = 0;            // 2by
+uint8_t flags = 0x00;        // 1by
+uint8_t switch_state = 0x00; // 1by
+/* imu messages             
+    ACC = 2by + 2by + 2by    // 6by   
+    DPS = 2by + 2by + 2by    // 6by
+*/
+/* Pitch(2by) + Roll(2by) */ // 4by
 int16_t angle_roll = 0, angle_pitch = 0; 
 
 int main ()
@@ -541,7 +545,7 @@ void Servo_flag(uint8_t state)
     }
 }
 
-void displayData(uint16_t vel, uint16_t Hz, uint16_t temp, uint16_t comb, uint16_t tempCVT, uint16_t SOC, uint16_t SOT)
+void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, uint16_t comb, uint8_t tempCVT, uint8_t SOC, uint8_t SOT)
 {
     //db = !db; 
     strc_data.speed = vel;
@@ -552,7 +556,7 @@ void displayData(uint16_t vel, uint16_t Hz, uint16_t temp, uint16_t comb, uint16
     strc_data.temp_cvt = tempCVT;
     strc_data.sot = sot;
 
-    memcpy(array_data, (uint16_t *)&strc_data, sizeof(strc_data));
+    memcpy(&array_data, (uint8_t *)&strc_data, sizeof(strc_data));
 
     for(uint8_t CountBytes = 0; CountBytes < sizeof(Txtmng); CountBytes++) 
     {
