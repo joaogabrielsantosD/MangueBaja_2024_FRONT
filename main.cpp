@@ -59,7 +59,7 @@ packet_t data;
 state_t current_state = IDLE_ST;
 bool switch_clicked = false;
 uint8_t array_data[sizeof(Txtmng)];
-uint8_t imu_failed = 0;                  // number of times before a new connection attempt with imu 
+uint8_t imu_failed = 0;                      // number of times before a new connection attempt with imu 
 uint8_t pulse_counter = 0, sot = 0x00;
 uint16_t dt = 0;
 uint32_t imu_last_acq = 0;

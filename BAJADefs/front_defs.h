@@ -34,15 +34,13 @@ typedef enum {
 } state_t;
 
 typedef struct {
-    
-  uint16_t speed;
-  uint16_t rpm;
-  uint8_t battery;
-  uint16_t level;
-  uint8_t temp_cvt;
-  uint8_t temp_motor;
-  uint8_t sot;
-
+  uint16_t speed;     // 2by
+  uint16_t rpm;       // 2by
+  uint8_t temp_motor; // 1by
+  uint16_t level;     // 2by
+  uint8_t battery;    // 1by
+  uint8_t temp_cvt;   // 1by
+  uint8_t sot;        // 1by
 } Txtmng;
 
 #endif
