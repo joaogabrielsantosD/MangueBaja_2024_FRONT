@@ -53,7 +53,7 @@ Timer t;
 bool buffer_full = false;
 unsigned int t0, t1;
 /* Global variables */
-FIR filter;
+FIR filter(0.595, 0.595); // FIR filter coefficients
 Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
