@@ -29,7 +29,7 @@ LSM6DS3 LSM6DS3(PB_7, PB_6);        // SDA, SCL
 //RFM69 radio(PB_15/*mosi*/, PB_14/*miso*/, PB_13/*sclk*/, PB_12/*CS*/, PA_8/*Interrupt*/); 
 
 /* I/O pins */
-DigitalIn acopl_4x4(PB_1, PullUp);
+DigitalIn acopl_4x4(PA_0, PullNone);
 InterruptIn freq_sensor(PB_4, PullNone);
 InterruptIn choke_switch(PA_6, PullUp);     // servomotor CHOKE mode
 InterruptIn run_switch(PA_5, PullUp);       // servomotor RUN mode
@@ -88,7 +88,7 @@ void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, uint16_t comb, uint8_t
 uint16_t RPM = 0;            // 2by
 uint8_t flags = 0x00;        // 1by
 uint8_t switch_state = 0x00; // 1by
-/* imu messages             
+/* imu messages:             
     ACC = 2by + 2by + 2by    // 6by   
     DPS = 2by + 2by + 2by    // 6by
 */
@@ -170,7 +170,10 @@ int main ()
                     t1 = t.read_us();
                     imu_failed = 0;
                     //serial.printf("%d\r\n", (t1 - t0));
-                } else {
+                } 
+                
+                else 
+                {
                     imu_failed++;
                 }
 
@@ -216,7 +219,10 @@ int main ()
 
                     Servo_flag(CHOKE_MODE);
                     //engine_counter.start();
-                } else {
+                } 
+                
+                else
+                {
                     rpm_hz = 0;
                     //writeServo(switch_state);
                     //engine_counter.stop();
@@ -344,11 +350,13 @@ int main ()
                         Servo_flag(CHOKE_MODE);
                         txMsg << CHOKE_MODE;
                     } 
+
                     else 
                     {
                         Servo_flag(switch_state);
                         txMsg << switch_state;
                     }
+
                     can.write(txMsg);
 
                     //serial.printf("can ok\r/n");                  // append data (8 bytes max)
@@ -387,7 +395,7 @@ int main ()
                 //serial.printf("Angle Pitch = %d\r\n", angle_pitch);
                 //serial.printf("RPM = %d\r\n", data.rpm);
                 //serial.printf("4x4 = %d\r\n", acopl_4x4.read())
-                //serial.printf("switch state = %d", switch_state);
+                //serial.printf("switch state = %d\r\n", switch_state);
                 break;
         }
     }
@@ -399,15 +407,18 @@ void setupInterrupts()
     /* General Interrupts */
     can.attach(&canISR, CAN::RxIrq);
     freq_sensor.fall(&frequencyCounterISR);
+
     /* Servo interrupts */
     choke_switch.rise(&servoSwitchISR);     // trigger throttle interrupt in both edges
     choke_switch.fall(&servoSwitchISR);     // trigger throttle interrupt in both edges
     run_switch.rise(&servoSwitchISR);       // trigger throttle interrupt in both edges
     run_switch.fall(&servoSwitchISR);       // trigger throttle interrupt in both edges
+
     /* Tickers */
     ticker1Hz.attach(&ticker1HzISR, 1.0);
     ticker5Hz.attach(&ticker5HzISR, 0.2); 
     ticker20Hz.attach(&ticker20HzISR, 0.05); 
+    
     /* PWM Signal */
     signal.period_ms(1000);
     signal.write(0.5f);

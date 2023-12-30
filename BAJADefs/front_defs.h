@@ -1,11 +1,10 @@
 #ifndef FRONT_DEFS_
 #define FRONT_DEFS_
 
-#ifndef MBED
-    #define MBED
+/*====================*/
     #include "mbed.h"
     #include "FIR.h"
-#endif
+/*====================*/
 
 /* IMU convertions */
 #define PI                  3.1416
@@ -13,6 +12,7 @@
 #define TO_G                2.0/32768.0
 #define TO_DPS              245.0/32768.0
 #define IMU_TRIES           10
+
 /* SERVO state */ 
 #define MID_MODE            0x00
 #define RUN_MODE            0x01
@@ -41,6 +41,7 @@ typedef struct {
   uint8_t battery;    // 1by
   uint8_t temp_cvt;   // 1by
   uint8_t sot;        // 1by
+  
 } Txtmng;
 
 #endif
