@@ -31,11 +31,11 @@ LSM6DS3 LSM6DS3(PB_7, PB_6);        // SDA, SCL
 /* I/O pins */
 DigitalIn acopl_4x4(PA_0, PullNone);
 InterruptIn freq_sensor(PB_4, PullNone);
-InterruptIn choke_switch(PA_6, PullUp);     // servomotor CHOKE mode
+InterruptIn choke_switch(PA_7, PullUp);     // servomotor CHOKE mode
 InterruptIn run_switch(PA_5, PullUp);       // servomotor RUN mode
 DigitalOut led(PC_13);
 /* Debug pins */
-PwmOut signal(PA_7);
+PwmOut signal(PA_6);
 DigitalOut db(PB_11);
 
 /* Mbed OS tools */
