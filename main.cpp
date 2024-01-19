@@ -1,15 +1,3 @@
-/* 
-    IDLE_ST E DEBUG_ST obrigatorios
-        * REAR: TEMP_MOTOR_ST, FUEL_ST, RPM_ST, THROTTLE_ST, RADIO_ST
-        * FRONT: SLOWACQ_ST, IMU_ST, SPEED_ST, THROTTLE_ST, DISPLAY_ST
-        * BMU: Voltage_ST, TEMP_CVT_ST, SystemCurrent_ST
-*/
-
-/* 
-    Novos:
-        * REAR:  TEMP_MOTOR_ST, FUEL_ST, TEMP_CVT_ST, SPEED_ST, SystemCurrent_ST, Voltage_ST, THROTTLE_ST
-        * FRONT: IMU_ST, RPM_ST, RADIO_ST/4X4_ST, THROTTLE_ST, FLAGS_ST, DISPLAY_ST
-*/
 #include "mbed.h"
 #include "stats_report.h"
 /* Instances Libraries */
@@ -20,7 +8,6 @@
 #include "defs.h"
 #include "front_defs.h"
 #include "FIR.h"
-
 
 /* Communication Protocols */
 CAN can(PB_8, PB_9, 1000000);       // RD, TD, Frequency
@@ -53,7 +40,7 @@ Timer t;
 bool buffer_full = false;
 unsigned int t0, t1;
 /* Global variables */
-FIR filter(0.595, 0.595); // FIR filter coefficients
+FIR filter(0.578, 0.576); // FIR filter coefficients
 Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
@@ -82,7 +69,7 @@ void setupInterrupts();
 void filterMessage(CANMsg msg);
 void calcAngles(int16_t accx, int16_t accy, int16_t accz, int16_t grx, int16_t gry, int16_t grz, int16_t dt);
 void Servo_flag(uint8_t state);
-void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, uint16_t comb, uint8_t tempCVT, uint8_t SOC, uint8_t SOT);
+void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, /*uint16_t comb,*/ uint8_t tempCVT, uint8_t SOC, uint8_t SOT);
 
 /* CAN Variables */
 uint16_t RPM = 0;            // 2by
@@ -341,7 +328,7 @@ int main ()
                 if(switch_clicked)
                 {                    
                     switch_state = (!choke_switch.read() << 1) | (!run_switch.read() << 0);
-                    //serial.printf("switch_state = %d\r\n", switch_state);
+                    //serial.printf("switch_state = %d\t", switch_state);
                     
                     /* Send CAN message */
                     txMsg.clear(THROTTLE_ID);
@@ -359,6 +346,7 @@ int main ()
 
                     can.write(txMsg);
 
+                    //serial.printf("flags = %d\r\n", flags);
                     //serial.printf("can ok\r/n");                  // append data (8 bytes max)
                     //if(can.write(txMsg)) led = !led;
                     //ThisThread::sleep_for(300);
@@ -379,8 +367,8 @@ int main ()
                 break;
 
             case DISPLAY_ST:
-                //serial.printf("display\r\n");  
-                displayData(data.speed, RPM, data.tempMOTOR, data.fuel, data.tempCVT, data.soc, sot);
+                //serial.printf("display\r\n"); 
+                displayData(data.speed, RPM, data.tempMOTOR, /*data.fuel,*/ data.tempCVT, data.soc, sot);
                 break;
 
             case DEBUG_ST:
@@ -393,9 +381,10 @@ int main ()
                 //serial.printf("DPSz = %d\r\n", LSM6DS3.gz_raw);
                 //serial.printf("Angle Roll = %d\r\n", angle_roll);
                 //serial.printf("Angle Pitch = %d\r\n", angle_pitch);
-                //serial.printf("RPM = %d\r\n", data.rpm);
-                //serial.printf("4x4 = %d\r\n", acopl_4x4.read())
+                //serial.printf("RPM = %d\r\n", RPM);
+                //serial.printf("4x4 = %d\r\n", !acopl_4x4.read());
                 //serial.printf("switch state = %d\r\n", switch_state);
+                //serial.printf("flags = %d\r\n", flags);
                 break;
         }
     }
@@ -436,26 +425,26 @@ void filterMessage(CANMsg msg)
     if(msg.id==TEMPERATURE_ID)
     {
         msg >> data.tempMOTOR;
-        flags |= ((data.tempMOTOR > 110) ? 0x08 >> 2 : 0);
+        ((data.tempMOTOR > 110) ? flags |= (0x80 >> 2) : flags &= ~(0x80 >> 2));
     }
 
-    if(msg.id==FUEL_ID)
-    {
-        msg >> data.fuel;
-        flags |= ((data.fuel==20) ? 0x08 >> 3 : 0);
-    }
+    //if(msg.id==FUEL_ID)
+    //{
+    //    msg >> data.fuel;
+    //    ((data.fuel==20) ? flags |= (0x08 >> 3) : flags &= ~(0x08 >> 3));
+    //}
 
     if(msg.id==SOC_ID)
     {
         msg >> data.soc;
-        flags |= ((data.soc<=20) ? 0x08 : 0);
+        ((data.soc<=20) ? flags |= 0x80 : flags &= ~0x80);
         //(data.soc < 20) ? data.flags |= (0x80) : 0;
     }
 
     if(msg.id==CVT_ID)
     {
         msg >> data.tempCVT;
-        flags |= ((data.tempCVT > 110) ? 0x08 >> 1 : 0); 
+        ((data.tempCVT > 110) ? flags |= (0x80 >> 1) : flags &= ~(0x80 >> 1)); 
     }
 
     if(msg.id==VOLTAGE_ID)
@@ -476,7 +465,7 @@ void filterMessage(CANMsg msg)
     if(msg.id==SOT_ID)
     {
         msg >> sot;
-        flags |= (sot==1 ? 0x04 : 0);
+        ((sot==1) ? flags |= 0x08 : flags &= ~0x08);
     }
 }
 
@@ -556,13 +545,14 @@ void Servo_flag(uint8_t state)
     }
 }
 
-void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, uint16_t comb, uint8_t tempCVT, uint8_t SOC, uint8_t SOT)
+void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, /*uint16_t comb,*/ uint8_t tempCVT, uint8_t SOC, uint8_t SOT)
 {
     //db = !db; 
     strc_data.speed = vel;
     strc_data.rpm = Hz;
     strc_data.battery = SOC;
-    strc_data.level = comb;
+    //strc_data.level = comb;
+    strc_data.level = 0;
     strc_data.temp_motor = temp;
     strc_data.temp_cvt = tempCVT;
     strc_data.sot = sot;
@@ -603,12 +593,14 @@ void servoSwitchISR()
 void ticker1HzISR()
 {
     state_buffer.push(FLAGS_ST);
+    state_buffer.push(VERIFY_4x4_ST);
 }
 
 void ticker5HzISR()
 {
     state_buffer.push(RPM_ST);
-    state_buffer.push(VERIFY_4x4_ST);
+    state_buffer.push(DISPLAY_ST);
+    //state_buffer.push(DEBUG_ST);
     //state_buffer.push(RADIO_ST);
 }
 
