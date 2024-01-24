@@ -35,7 +35,7 @@ Ticker ticker5Hz;
 Ticker ticker20Hz;
 Ticker tickerTrottle;
 Timeout debounce_throttle;
-Timeout debouce_button;
+Timeout debounce_button;
 
 /* Debug variables */
 Timer t;
@@ -494,8 +494,11 @@ void filterMessage(CANMsg msg)
 
     if(msg.id==SOT_ID)
     {
-        msg >> sot;
-        ((sot==1) ? flags |= 0x08 : flags &= ~0x08);
+        uint8_t s;
+        msg >> s;
+        
+        sot |= s;
+        ((sot==1 || sot==3) ? flags |= 0x08 : flags &= ~0x08);
     }
 }
 
@@ -625,7 +628,7 @@ void Button4x4ISR()
     acopl_4x4.rise(NULL);
     acopl_4x4.fall(NULL);
     button_clicked = true;
-    debouce_button.attach(&ButtonDebouceHandler, 0.1);
+    debounce_button.attach(&ButtonDebouceHandler, 0.1);
 }
 
 void ticker1HzISR()
