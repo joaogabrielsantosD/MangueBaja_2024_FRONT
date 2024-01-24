@@ -16,7 +16,8 @@ LSM6DS3 LSM6DS3(PB_7, PB_6);        // SDA, SCL
 //RFM69 radio(PB_15/*mosi*/, PB_14/*miso*/, PB_13/*sclk*/, PB_12/*CS*/, PA_8/*Interrupt*/); 
 
 /* I/O pins */
-DigitalIn acopl_4x4(PA_0, PullNone);
+//DigitalIn acopl_4x4(PA_0, PullNone);
+InterruptIn acopl_4x4(PA_0, PullDown);
 InterruptIn freq_sensor(PB_4, PullNone);
 InterruptIn choke_switch(PA_7, PullUp);     // servomotor CHOKE mode
 InterruptIn run_switch(PA_5, PullUp);       // servomotor RUN mode
@@ -34,6 +35,7 @@ Ticker ticker5Hz;
 Ticker ticker20Hz;
 Ticker tickerTrottle;
 Timeout debounce_throttle;
+Timeout debouce_button;
 
 /* Debug variables */
 Timer t;
@@ -45,6 +47,7 @@ Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
 bool switch_clicked = false;
+bool button_clicked = false;
 uint8_t array_data[sizeof(Txtmng)];
 uint8_t imu_failed = 0;                      // number of times before a new connection attempt with imu 
 uint8_t pulse_counter = 0, sot = 0x00;
@@ -57,10 +60,12 @@ float rpm_hz;
 /* Interrupt handlers */
 void canHandler();
 void throttleDebounceHandler();
+void ButtonDebouceHandler();
 /* Interrupt services routine */
 void canISR();
 void frequencyCounterISR();
 void servoSwitchISR();
+void Button4x4ISR();
 void ticker1HzISR();
 void ticker5HzISR();
 void ticker20HzISR();
@@ -96,6 +101,10 @@ int main ()
     t1 = t.read_us();
     //serial.printf("%d\r\n", (t1 - t0));
     setupInterrupts();
+
+    // !acopl_4x4.read()==1 => 4x4(button pressed) || !acopl_4x4.read()==0 => 4x2(button raised)  
+    /* Check the 4x4 */
+    sot |= ((!acopl_4x4.read() << 1) & 0x02);
 
     while(true)
     {
@@ -231,8 +240,25 @@ int main ()
                 break;
 
             case VERIFY_4x4_ST:
+                //serial.printf("verify 4x4");
                 //sot <<= acopl_4x4.read();
-                sot |= ((!acopl_4x4.read() << 1) & 0x02);
+
+                if(button_clicked)
+                {   
+                    if(!acopl_4x4.read())
+                    {
+                        sot |= 0x02;
+                        db = 1;
+                    }
+
+                    else
+                    {
+                        sot &= ~0x02;
+                        db = 0;
+                    }
+
+                    button_clicked = false;
+                }
 
                 break;
                 //case RADIO_ST:
@@ -402,6 +428,10 @@ void setupInterrupts()
     choke_switch.fall(&servoSwitchISR);     // trigger throttle interrupt in both edges
     run_switch.rise(&servoSwitchISR);       // trigger throttle interrupt in both edges
     run_switch.fall(&servoSwitchISR);       // trigger throttle interrupt in both edges
+
+    /* 4x4 Interrupts */
+    acopl_4x4.rise(&Button4x4ISR);
+    acopl_4x4.fall(&Button4x4ISR);
 
     /* Tickers */
     ticker1Hz.attach(&ticker1HzISR, 1.0);
@@ -590,10 +620,18 @@ void servoSwitchISR()
     debounce_throttle.attach(&throttleDebounceHandler, 0.1);
 }
 
+void Button4x4ISR()
+{
+    acopl_4x4.rise(NULL);
+    acopl_4x4.fall(NULL);
+    button_clicked = true;
+    debouce_button.attach(&ButtonDebouceHandler, 0.1);
+}
+
 void ticker1HzISR()
 {
     state_buffer.push(FLAGS_ST);
-    state_buffer.push(VERIFY_4x4_ST);
+    //state_buffer.push(VERIFY_4x4_ST);
 }
 
 void ticker5HzISR()
@@ -626,4 +664,11 @@ void throttleDebounceHandler()
     choke_switch.fall(&servoSwitchISR);     // trigger throttle interrupt in both edges
     run_switch.rise(&servoSwitchISR);       // trigger throttle interrupt in both edges
     run_switch.fall(&servoSwitchISR);       // trigger throttle interrupt in both edges
+}
+
+void ButtonDebouceHandler()
+{
+    state_buffer.push(VERIFY_4x4_ST);
+    acopl_4x4.rise(&Button4x4ISR);
+    acopl_4x4.fall(&Button4x4ISR);
 }
