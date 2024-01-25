@@ -102,9 +102,9 @@ int main ()
     //serial.printf("%d\r\n", (t1 - t0));
     setupInterrupts();
 
-    // !acopl_4x4.read()==1 => 4x4(button pressed) || !acopl_4x4.read()==0 => 4x2(button raised)  
+    // acopl_4x4.read()==0 => 4x4(button pressed) || acopl_4x4.read()==1 => 4x2(button raised)  
     /* Check the 4x4 */
-    sot |= ((!acopl_4x4.read() << 1) & 0x02);
+    sot |= ((acopl_4x4.read() << 1) & 0x02);
 
     while(true)
     {
@@ -245,7 +245,7 @@ int main ()
 
                 if(button_clicked)
                 {   
-                    if(!acopl_4x4.read())
+                    if(acopl_4x4.read())
                     {
                         sot |= 0x02;
                         db = 1;
@@ -408,7 +408,7 @@ int main ()
                 //serial.printf("Angle Roll = %d\r\n", angle_roll);
                 //serial.printf("Angle Pitch = %d\r\n", angle_pitch);
                 //serial.printf("RPM = %d\r\n", RPM);
-                //serial.printf("4x4 = %d\r\n", !acopl_4x4.read());
+                //serial.printf("4x4 = %d\r\n", acopl_4x4.read());
                 //serial.printf("switch state = %d\r\n", switch_state);
                 //serial.printf("flags = %d\r\n", flags);
                 break;
