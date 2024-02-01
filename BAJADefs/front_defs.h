@@ -1,5 +1,5 @@
-#ifndef FRONT_DEFS_
-#define FRONT_DEFS_
+#ifndef FRONT_DEFS_H
+#define FRONT_DEFS_H
 
 /*====================*/
     #include "mbed.h"
