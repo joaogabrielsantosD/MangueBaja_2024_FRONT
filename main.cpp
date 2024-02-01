@@ -439,7 +439,7 @@ void setupInterrupts()
     ticker20Hz.attach(&ticker20HzISR, 0.05); 
     
     /* PWM Signal */
-    signal.period_ms(1000);
+    signal.period_ms(50);
     signal.write(0.5f);
 }
 
@@ -455,6 +455,7 @@ void filterMessage(CANMsg msg)
     if(msg.id==TEMPERATURE_ID)
     {
         msg >> data.tempMOTOR;
+
         ((data.tempMOTOR > 110) ? flags |= (0x80 >> 2) : flags &= ~(0x80 >> 2));
     }
 
@@ -467,6 +468,7 @@ void filterMessage(CANMsg msg)
     if(msg.id==SOC_ID)
     {
         msg >> data.soc;
+
         ((data.soc<=20) ? flags |= 0x80 : flags &= ~0x80);
         //(data.soc < 20) ? data.flags |= (0x80) : 0;
     }
@@ -474,6 +476,7 @@ void filterMessage(CANMsg msg)
     if(msg.id==CVT_ID)
     {
         msg >> data.tempCVT;
+
         ((data.tempCVT > 110) ? flags |= (0x80 >> 1) : flags &= ~(0x80 >> 1)); 
     }
 
@@ -496,8 +499,8 @@ void filterMessage(CANMsg msg)
     {
         uint8_t s;
         msg >> s;
-        
-        sot |= s;
+
+        sot ^= s;
         ((sot==1 || sot==3) ? flags |= 0x08 : flags &= ~0x08);
     }
 }
