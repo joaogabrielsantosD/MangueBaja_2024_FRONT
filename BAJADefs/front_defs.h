@@ -20,6 +20,8 @@
 #define SERVO_RESET         0x03
 #define SERVOR_ERROR        0x04
 
+#define MQTT_FLAG(p)        ((p==0x01||p==0x03)?true:false) 
+
 typedef enum {
     IDLE_ST,        // wait
     IMU_ST,         // Process the acceleration and angular velocity 

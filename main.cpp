@@ -500,8 +500,9 @@ void filterMessage(CANMsg msg)
         uint8_t s;
         msg >> s;
 
-        sot ^= s;
-        ((sot==1 || sot==3) ? flags |= 0x08 : flags &= ~0x08);
+        //sot ^= s;
+        (s==1 ? sot |= 0x01 : sot &= ~0x01);
+        (MQTT_FLAG(sot) ? flags |= 0x08 : flags &= ~0x08);
     }
 }
 
