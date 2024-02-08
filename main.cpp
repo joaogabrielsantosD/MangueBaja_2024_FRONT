@@ -498,7 +498,7 @@ void filterMessage(CANMsg msg)
         msg >> s;
         
         //sot |= s;
-        (s==0 ? sot &= ~0x01 : (sot==1 ? sot |= 0x01 : sot |= s));
+        (s==0 ? sot &= ~0x01 : (s==1 ? sot |= 0x01 : sot |= s));
         ((sot==1 || sot==3) ? flags |= 0x08 : flags &= ~0x08);
     }
 }
