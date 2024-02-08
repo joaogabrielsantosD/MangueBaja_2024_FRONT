@@ -1,10 +1,8 @@
 #ifndef FRONT_DEFS_H
 #define FRONT_DEFS_H
 
-/*====================*/
-    #include "mbed.h"
-    #include "FIR.h"
-/*====================*/
+#include "mbed.h"
+#include "FIR.h"
 
 /* IMU convertions */
 #define PI                  3.1416
