@@ -84,7 +84,7 @@ uint8_t switch_state = 0x00; // 1by
     ACC = 2by + 2by + 2by    // 6by   
     DPS = 2by + 2by + 2by    // 6by
 */
-/* Pitch(2by) + Roll(2by) */ // 4by
+// Pitch(2by) + Roll(2by) |  4by
 int16_t angle_roll = 0, angle_pitch = 0; 
 
 int main ()
@@ -388,7 +388,9 @@ int main ()
                 /* Send flags message */
                 txMsg.clear(FLAGS_ID);
                 txMsg << flags;
-                can.write(txMsg);
+                //can.write(txMsg);
+                if(can.write(txMsg))
+                    led = !led;
             
                 break;
 
