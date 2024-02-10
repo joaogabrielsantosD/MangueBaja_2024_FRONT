@@ -42,7 +42,7 @@ Timer t;
 bool buffer_full = false;
 unsigned int t0, t1;
 /* Global variables */
-FIR filter(0.578, 0.576); // FIR filter coefficients
+FIR filter(0.58, 0.58); // FIR filter coefficients
 Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
@@ -413,6 +413,7 @@ int main ()
                 //serial.printf("4x4 = %d\r\n", acopl_4x4.read());
                 //serial.printf("switch state = %d\r\n", switch_state);
                 //serial.printf("flags = %d\r\n", flags);
+                //serial.printf("\n\n\n");
                 break;
         }
     }
