@@ -480,21 +480,6 @@ void filterMessage(CANMsg msg)
         ((data.tempCVT > 110) ? flags |= (0x80 >> 1) : flags &= ~(0x80 >> 1)); 
     }
 
-    if(msg.id==VOLTAGE_ID)
-    {
-        msg >> data.voltage;
-    }
-
-    if(msg.id==LAT_ID)
-    {
-        msg >> data.latitude;
-    }
-
-    if(msg.id==LNG_ID)
-    {
-        msg >> data.longitude;
-    }
-
     if(msg.id==SOT_ID)
     {
         uint8_t s;
