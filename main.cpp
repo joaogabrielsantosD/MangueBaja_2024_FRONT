@@ -40,9 +40,8 @@ Timeout debounce_button;
 /* Debug variables */
 Timer t;
 bool buffer_full = false;
-unsigned int t0, t1;
 /* Global variables */
-FIR filter(0.58, 0.58); // FIR filter coefficients
+FIR filter(0.58, 0.6); // FIR filter coefficients
 Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
@@ -96,10 +95,8 @@ int main ()
     //horn = horn_button.read();                               // horn OFF
     //headlight = headlight_switch.read();                     // headlight OFF
     eventThread.start(callback(&queue, &EventQueue::dispatch_forever));
-    t0 = t.read_us();
     uint16_t lsm_addr = LSM6DS3.begin(LSM6DS3.G_SCALE_245DPS, LSM6DS3.A_SCALE_2G, LSM6DS3.G_ODR_26_BW_2, LSM6DS3.A_ODR_26); 
-    t1 = t.read_us();
-    //serial.printf("%d\r\n", (t1 - t0));
+    
     setupInterrupts();
 
     // acopl_4x4.read()==0 => 4x4(button pressed) || acopl_4x4.read()==1 => 4x2(button raised)  
@@ -122,15 +119,6 @@ int main ()
                 current_state = IDLE_ST;
         }
 
-        //serial.printf("current state = %d", current_state);
-        //if(current_state==0) serial.printf("IDLE_ST\n");
-        //if(current_state==1) serial.printf("IMU_ST\n");
-        //if(current_state==2) serial.printf("RPM_ST\n");
-        //if(current_state==3) serial.printf("VERIFY_4X4_ST\n");
-        //if(current_state==4) serial.printf("THROTTLE_ST\n");
-        //if(current_state==5) serial.printf("RADIO_ST\n");
-        //if(current_state==6) serial.printf("DEBUG_ST\n");
-
         switch(current_state) 
         {
             case IDLE_ST:
@@ -140,7 +128,7 @@ int main ()
 
             case IMU_ST:
                 //serial.printf("imu\r\n");
-                t0 = t.read_us();
+                //t0 = t.read_us();
 
                 if(lsm_addr)
                 {
@@ -163,7 +151,7 @@ int main ()
                 else if(imu_failed == IMU_TRIES)
                 {
                     lsm_addr = LSM6DS3.begin(LSM6DS3.G_SCALE_245DPS, LSM6DS3.A_SCALE_2G, LSM6DS3.G_ODR_26_BW_2, LSM6DS3.A_ODR_26);                                    
-                    t1 = t.read_us();
+                    //t1 = t.read_us();
                     imu_failed = 0;
                     //serial.printf("%d\r\n", (t1 - t0));
                 } 
@@ -348,7 +336,7 @@ int main ()
                 //    //serial.printf("%d\r\n",tim2);
                 //    break;
 
-            case THROTTLE_ST:
+            case THROTTLE_ST:    
                 //serial.printf("throttle ok\r\n");
 
                 if(switch_clicked)
@@ -358,19 +346,10 @@ int main ()
                     
                     /* Send CAN message */
                     txMsg.clear(THROTTLE_ID);
-                    if(RPM!=0)
-                    {
-                        Servo_flag(CHOKE_MODE);
-                        txMsg << CHOKE_MODE;
-                    } 
-
-                    else 
-                    {
-                        Servo_flag(switch_state);
-                        txMsg << switch_state;
-                    }
-
+                    txMsg << (RPM!=0 ? CHOKE_MODE : switch_state);
                     can.write(txMsg);
+
+                    Servo_flag(RPM!=0 ? CHOKE_MODE : switch_state);
 
                     //serial.printf("flags = %d\r\n", flags);
                     //serial.printf("can ok\r/n");                  // append data (8 bytes max)
@@ -383,7 +362,7 @@ int main ()
                 break;
 
             case FLAGS_ST:
-                //serial.printf("flags\r\n");   
+                //serial.printf("flags\r\n");
 
                 /* Send flags message */
                 txMsg.clear(FLAGS_ID);
@@ -446,7 +425,7 @@ void setupInterrupts()
     signal.write(0.5f);
 }
 
-void filterMessage(CANMsg msg)
+void filterMessage(CANMsg msg) 
 {
     led = !led;
 
@@ -470,7 +449,7 @@ void filterMessage(CANMsg msg)
     if(msg.id==SOC_ID)
     {
         msg >> data.soc;
-        ((data.soc<=20) ? flags |= 0x80 : flags &= ~0x80);
+        ((data.soc <= 20) ? flags |= 0x80 : flags &= ~0x80);
         //(data.soc < 20) ? data.flags |= (0x80) : 0;
     }
 
@@ -577,10 +556,10 @@ void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, /*uint16_t comb,*/ uin
     //db = !db; 
     strc_data.speed = vel;
     strc_data.rpm = Hz;
-    strc_data.battery = SOC;
+    strc_data.temp_motor = temp;
     //strc_data.level = comb;
     strc_data.level = 0;
-    strc_data.temp_motor = temp;
+    strc_data.battery = SOC;
     strc_data.temp_cvt = tempCVT;
     strc_data.sot = sot;
 
