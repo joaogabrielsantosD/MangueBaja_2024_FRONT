@@ -41,7 +41,7 @@ Timeout debounce_button;
 Timer t;
 bool buffer_full = false;
 /* Global variables */
-FIR filter(0.58, 0.6); // FIR filter coefficients
+FIR filter(0.58, 0.58); // FIR filter coefficients
 Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
@@ -187,7 +187,7 @@ int main ()
                 break;
 
             case RPM_ST:
-                //serial.printf("rpm\r\n");
+                //  serial.printf("rpm\r\n");
                 freq_sensor.fall(NULL);         // disable interrupt
 
                 if(current_period!=0) 
@@ -421,7 +421,7 @@ void setupInterrupts()
     ticker20Hz.attach(&ticker20HzISR, 0.05); 
     
     /* PWM Signal */
-    signal.period_ms(1000);
+    signal.period_ms(100);
     signal.write(0.5f);
 }
 
@@ -553,7 +553,6 @@ void Servo_flag(uint8_t state)
 
 void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, /*uint16_t comb,*/ uint8_t tempCVT, uint8_t SOC, uint8_t SOT)
 {
-    //db = !db; 
     strc_data.speed = vel;
     strc_data.rpm = Hz;
     strc_data.temp_motor = temp;
