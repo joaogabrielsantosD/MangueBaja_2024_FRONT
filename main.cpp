@@ -41,7 +41,7 @@ Timeout debounce_button;
 Timer t;
 bool buffer_full = false;
 /* Global variables */
-FIR filter(0.58, 0.58); // FIR filter coefficients
+FIR filter(0.58, 0.6); // FIR filter coefficients
 Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
