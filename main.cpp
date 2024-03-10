@@ -5,12 +5,10 @@
 #include "LSM6DS3.h"
 #include "Kalman.h"
 /* User Libraries */
-#include "defs.h"
 #include "front_defs.h"
-#include "FIR.h"
 
 /* Communication Protocols */
-CAN can(PB_8, PB_9, 1000000);       // RD, TD, Frequency
+CAN can(PB_8, PB_9, CAN_BPS_1000K); // RD, TD, Frequency
 Serial serial(PA_2, PA_3, 115200);  // TX, RX, Baudrate
 LSM6DS3 LSM6DS3(PB_7, PB_6);        // SDA, SCL
 //RFM69 radio(PB_15/*mosi*/, PB_14/*miso*/, PB_13/*sclk*/, PB_12/*CS*/, PA_8/*Interrupt*/); 
@@ -41,7 +39,7 @@ Timeout debounce_button;
 Timer t;
 bool buffer_full = false;
 /* Global variables */
-FIR filter(0.58, 0.6); // FIR filter coefficients
+FIR filter(0.55, 0.57); // FIR filter coefficients
 Txtmng strc_data;
 packet_t data;
 state_t current_state = IDLE_ST;
@@ -78,12 +76,14 @@ void displayData(uint16_t vel, uint16_t Hz, uint8_t temp, /*uint16_t comb,*/ uin
 /* CAN Variables */
 uint16_t RPM = 0;            // 2by
 uint8_t flags = 0x00;        // 1by
+// flag = SoC | CVT | MOTOR | FUEL | MQTT | SERVO-ERROR | CHOKE | RUN |
 uint8_t switch_state = 0x00; // 1by
-/* imu messages:             
-    ACC = 2by + 2by + 2by    // 6by   
-    DPS = 2by + 2by + 2by    // 6by
+/* 
+    imu messages:
+        ACC = x(2by) + y(2by) + z(2by)    // 6by
+        DPS = x(2by) + y(2by) + z(2by)    // 6by
 */
-// Pitch(2by) + Roll(2by) |  4by
+// Pitch(2by) + Roll(2by) =  4by
 int16_t angle_roll = 0, angle_pitch = 0; 
 
 int main ()
@@ -95,7 +95,9 @@ int main ()
     //horn = horn_button.read();                               // horn OFF
     //headlight = headlight_switch.read();                     // headlight OFF
     eventThread.start(callback(&queue, &EventQueue::dispatch_forever));
-    uint16_t lsm_addr = LSM6DS3.begin(LSM6DS3.G_SCALE_245DPS, LSM6DS3.A_SCALE_2G, LSM6DS3.G_ODR_26_BW_2, LSM6DS3.A_ODR_26); 
+
+    uint16_t lsm_addr = LSM6DS3.begin(LSM6DS3.G_SCALE_245DPS, LSM6DS3.A_SCALE_2G, \
+                                      LSM6DS3.G_ODR_26_BW_2, LSM6DS3.A_ODR_26); 
     
     setupInterrupts();
 
@@ -211,7 +213,7 @@ int main ()
                     //writeServo(switch_state);
                     //engine_counter.stop();
                 }
-
+                rpm_hz /= 1.55;
                 RPM = (uint16_t)(filter.filt(rpm_hz));
 
                 /* Send RPM data */
@@ -249,92 +251,6 @@ int main ()
                 }
 
                 break;
-                //case RADIO_ST:
-                //    //serial.printf("ra\n");
-                //    imu_t* temp_imu;
-                //    /*if(radio.receiveDone()) 
-                //    {
-                //        led = !led;
-                //        serial.printf("Received from TNODE: %d ", radio.SENDERID);
-                //        serial.printf((char *)radio.DATA);
-                //        if(radio.ACKRequested())
-                //        {
-                //            theNodeID = radio.SENDERID;
-                //            radio.sendACK();
-                //            serial.printf(" - ACK sent. Receive RSSI: %d\r\n", radio.RSSI);
-                //        } 
-                //        else 
-                //            serial.printf("Receive RSSI: %d\r\n",radio.RSSI);
-                //    }*/
-                //    //dbg4 = 1;
-                //    //if(radio.receiveDone())
-                //    //{
-                //    //if (radio.ACKRequested())
-                //    //radio.sendACK();
-                //    //led = 0;
-                //    //}
-
-                //    //serial.printf("%d,%d,%d\r\n", (!imu_buffer.empty()), (!d10hz_buffer.empty()), (!temp_buffer.empty()));
-                //    //if((!imu_buffer.empty()) && (!d10hz_buffer.empty()) && (!temp_buffer.empty()))
-                //    //{
-                // 
-                //        //serial.printf("Radio state\n");
-                //    //led = !led;
-
-                //        //(radio.canSend()) ? serial.printf("É possivel mandar\n\r->") : serial.printf("Não é possivel mandar\n\r---");
-
-                //    if(!imu_buffer.empty()) 
-                //    {
-                //        //serial.printf("imu buffer\n");
-                //        imu_buffer.pop(temp_imu);
-                //        memcpy(&data.imu, temp_imu, sizeof(imu_t));
-                //        //data.rpm = ((uint16_t)rpm_hz * 60)*65536.0/5000.0;
-                //        data.timestamp = t.read_us();
-                //        #ifdef MB1
-                //            //if(!radio.sendWithRetry((uint8_t)BOXRADIO_ID1, &data, sizeof(packet_t), true))
-                //            //    db = !db; /*serial.printf("ok with ack\n");*/
-                //            //else
-                //            //    serial.printf("ok without ack\n"); 
-                //            radio.send((uint8_t)BOXRADIO_ID1, &data, sizeof(packet_t), true, false);     // request ACK with 1 retry (waitTime = 40ms)
-                //        #endif
-
-                //        #ifdef MB2
-                //            //if(!radio.sendWithRetry((uint8_t)BOXRADIO_ID2, &data, sizeof(packet_t), true))
-                //            //    db = !db; /*serial.printf("ok with ack\n");*/
-                //            //else
-                //            //    serial.printf("ok without ack\n"); 
-                //            radio.send((uint8_t)BOXRADIO_ID2, &data, sizeof(packet_t), true, false);     // request ACK with 1 retry (waitTime = 40ms)
-                //            //serial.printf("entrou no primeito if!!\n\n");
-                //        #endif
-                //    } 
-                //
-                //    else if(t.read_ms() - imu_last_acq > 500) 
-                //    {
-                //        //serial.printf("not imu buffer acq\n");
-                //        memset(&data.imu, 0, sizeof(imu_t));
-                //        //data.rpm = ((uint16_t)rpm_hz * 60)*65536.0/5000.0;
-                //        #ifdef MB1
-                //            //if(!radio.sendWithRetry((uint8_t)BOXRADIO_ID1, &data, sizeof(packet_t), true))
-                //            //    db = !db; /*serial.printf("ok with ack\n");*/
-                //            //else
-                //            //    serial.printf("ok without ack\n");
-                //            radio.send((uint8_t)BOXRADIO_ID1, &data, sizeof(packet_t), true, false);     // request ACK with 1 retry (waitTime = 40ms)
-                //        #endif
-
-                //        #ifdef MB2
-                //            radio.send((uint8_t)BOXRADIO_ID2, &data, sizeof(packet_t), true, false);     // request ACK with 1 retry (waitTime = 40ms)
-                //            //if(!radio.sendWithRetry((uint8_t)BOXRADIO_ID2, &data, sizeof(packet_t), true))
-                //            //    db = !db; /*serial.printf("ok with ack\n");*/
-                //            //else
-                //            //    serial.printf("ok without ack\n");
-                //        #endif
-                //    }
-                //    //}
-                //    //radio.receiveDone();
-                //    //dbg4 = 0;
-                //    //tim2 = t.read_us() - tim1;
-                //    //serial.printf("%d\r\n",tim2);
-                //    break;
 
             case THROTTLE_ST:    
                 //serial.printf("throttle ok\r\n");
@@ -351,11 +267,6 @@ int main ()
 
                     Servo_flag(RPM!=0 ? CHOKE_MODE : switch_state);
 
-                    //serial.printf("flags = %d\r\n", flags);
-                    //serial.printf("can ok\r/n");                  // append data (8 bytes max)
-                    //if(can.write(txMsg)) led = !led;
-                    //ThisThread::sleep_for(300);
-                    
                     switch_clicked = false;
                 }
 
@@ -367,9 +278,9 @@ int main ()
                 /* Send flags message */
                 txMsg.clear(FLAGS_ID);
                 txMsg << flags;
-                //can.write(txMsg);
-                if(can.write(txMsg))
-                    led = !led;
+                can.write(txMsg);
+                //if(can.write(txMsg))
+                //    led = !led;
             
                 break;
 
@@ -380,17 +291,17 @@ int main ()
 
             case DEBUG_ST:
                 //serial.printf("Debug state\r\n");
-                //serial.printf("Accx = %d\r\n", LSM6DS3.ax_raw);
-                //serial.printf("Accy = %d\r\n", LSM6DS3.ay_raw);
-                //serial.printf("Accz = %d\r\n", LSM6DS3.az_raw);
+                //serial.printf("Accx = %f\r\n", (float)(LSM6DS3.ax_raw*0.061 / 1000));
+                //serial.printf("Accy = %f\r\n", (float)(LSM6DS3.ay_raw*0.061 / 1000));
+                //serial.printf("Accz = %f\r\n", (float)(LSM6DS3.az_raw*0.061 / 1000));
                 //serial.printf("DPSx = %d\r\n", LSM6DS3.gx_raw);
                 //serial.printf("DPSy = %d\r\n", LSM6DS3.gy_raw);
                 //serial.printf("DPSz = %d\r\n", LSM6DS3.gz_raw);
                 //serial.printf("Angle Roll = %d\r\n", angle_roll);
                 //serial.printf("Angle Pitch = %d\r\n", angle_pitch);
                 //serial.printf("RPM = %d\r\n", RPM);
-                //serial.printf("4x4 = %d\r\n", acopl_4x4.read());
-                //serial.printf("switch state = %d\r\n", switch_state);
+                //serial.printf("4x4 = %s\r\n", acopl_4x4.read() ? "Yes" : "No");
+                //serial.printf("switch state = %s\r\n", switch_state==0 ? "MID" : switch_state==1 ? "RUN" : "CHOKE" );
                 //serial.printf("flags = %d\r\n", flags);
                 //serial.printf("\n\n\n");
                 break;
