@@ -3,6 +3,9 @@
 
 #include "mbed.h"
 #include "FIR.h"
+#include "defs.h"
+
+#define CAN_BPS_1000K       1000000
 
 /* IMU convertions */
 #define PI                  3.1416
